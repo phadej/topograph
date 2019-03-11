@@ -10,7 +10,7 @@ description:
   .
   There are some algorithms build-in: dfs, transpose, transitive closure,
   transitive reduction...
-  Some algorithms also become even not-so-hard to implement, like a longest path!
+  Some algorithms even become not-so-hard to implement, like a longest path!
 
 homepage:           https://github.com/phadej/topograph
 bug-reports:        https://github.com/phadej/topograph/issues

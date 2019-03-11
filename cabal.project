@@ -1,0 +1,3 @@
+packages: .
+package topograph
+  ghc-options: -Wall

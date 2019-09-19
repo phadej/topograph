@@ -53,8 +53,8 @@ import Data.Ord         (Down (..))
 import Data.Set         (Set)
 
 import qualified Data.Graph                  as G
-import qualified Data.Map                    as M
-import qualified Data.Set                    as S
+import qualified Data.Map                    as Map
+import qualified Data.Set                    as Set
 import qualified Data.Tree                   as T
 import qualified Data.Vector                 as V
 import qualified Data.Vector.Unboxed         as U
@@ -70,7 +70,7 @@ import qualified Data.Vector.Unboxed.Mutable as MU
 --
 -- <<dag-original.png>>
 --
--- >>> let example :: Map Char (Set Char); example = M.map S.fromList $ M.fromList [('a', "bxde"), ('b', "d"), ('x', "de"), ('d', "e"), ('e', "")]
+-- >>> let example :: Map Char (Set Char); example = Map.map Set.fromList $ Map.fromList [('a', "bxde"), ('b', "d"), ('x', "de"), ('d', "e"), ('e', "")]
 --
 -- >>> :set -XRecordWildCards
 -- >>> import Data.Monoid (All (..))
@@ -155,11 +155,11 @@ data G v i = G
 --
 -- ==== Not DAG
 --
--- >>> let loop = M.map S.fromList $ M.fromList [('a', "bx"), ('b', "cx"), ('c', "ax"), ('x', "")]
+-- >>> let loop = Map.map Set.fromList $ Map.fromList [('a', "bx"), ('b', "cx"), ('c', "ax"), ('x', "")]
 -- >>> runG loop $ \G {..} -> map gFromVertex gVertices
 -- Left "abc"
 --
--- >>> runG (M.singleton 'a' (S.singleton 'a')) $ \G {..} -> map gFromVertex gVertices
+-- >>> runG (Map.singleton 'a' (Set.singleton 'a')) $ \G {..} -> map gFromVertex gVertices
 -- Left "aa"
 --
 runG
@@ -175,7 +175,7 @@ runG m f
     r  :: G.Vertex -> ((), v, [v])
     _t  :: v -> Maybe G.Vertex
 
-    (gr, r, _t) = G.graphFromEdges [ ((), v, S.toAscList us) | (v, us) <- M.toAscList m ]
+    (gr, r, _t) = G.graphFromEdges [ ((), v, Set.toAscList us) | (v, us) <- Map.toAscList m ]
 
     r' :: G.Vertex -> v
     r' i = case r i of (_, v, _) -> v
@@ -187,14 +187,14 @@ runG m f
     indices = V.fromList (map r' topo)
 
     revIndices :: Map v Int
-    revIndices = M.fromList $ zip (map r' topo) [0..]
+    revIndices = Map.fromList $ zip (map r' topo) [0..]
 
     edges :: V.Vector [Int]
     edges = V.map
         (\v -> maybe
             []
-            (\sv -> sort $ mapMaybe (\v' -> M.lookup v' revIndices) $ S.toList sv)
-            (M.lookup v m))
+            (\sv -> sort $ mapMaybe (\v' -> Map.lookup v' revIndices) $ Set.toList sv)
+            (Map.lookup v m))
         indices
 
     -- TODO: let's see if this check is too expensive
@@ -212,7 +212,7 @@ runG m f
     g = G
         { gVertices     = [0 .. V.length indices - 1]
         , gFromVertex   = (indices V.!)
-        , gToVertex     = (`M.lookup` revIndices)
+        , gToVertex     = (`Map.lookup` revIndices)
         , gDiff         = \a b -> b - a
         , gEdges        = (edges V.!)
         , gVerticeCount = V.length indices
@@ -279,11 +279,11 @@ allPaths' G {..} a b end = concatMap go (gEdges a) where
 -- >>> fmap3 (T.foldTree $ \a bs -> if null bs then [[a]] else concatMap (map (a:)) bs) t
 -- Right (Just (Just ["axde","axe","abde","ade","ae"]))
 --
--- >>> fmap3 (S.fromList . treePairs) t
+-- >>> fmap3 (Set.fromList . treePairs) t
 -- Right (Just (Just (fromList [('a','b'),('a','d'),('a','e'),('a','x'),('b','d'),('d','e'),('x','d'),('x','e')])))
 --
 -- >>> let ls = runG example $ \g@G{..} -> fmap3 gFromVertex $ allPaths g <$> gToVertex 'a' <*> gToVertex 'e'
--- >>> fmap2 (S.fromList . concatMap pairs) ls
+-- >>> fmap2 (Set.fromList . concatMap pairs) ls
 -- Right (Just (fromList [('a','b'),('a','d'),('a','e'),('a','x'),('b','d'),('d','e'),('x','d'),('x','e')]))
 --
 -- 'Tree' paths show how one can explore the paths.
@@ -397,20 +397,20 @@ longestPathLengths = pathLenghtsImpl max
 pathLenghtsImpl :: forall v i. Ord i => (Int -> Int -> Int) -> G v i -> i -> [Int]
 pathLenghtsImpl merge G {..} a = runST $ do
     v <- MU.replicate (length gVertices) (0 :: Int)
-    go v (S.singleton a)
+    go v (Set.singleton a)
     v' <- U.freeze v
     pure (U.toList v')
   where
     go :: MU.MVector s Int -> Set i -> ST s ()
     go v xs = do
-        case S.minView xs of
+        case Set.minView xs of
             Nothing       -> pure ()
             Just (x, xs') -> do
                 c <- MU.unsafeRead v (gVertexIndex x)
-                let ys = S.fromList $ gEdges x
+                let ys = Set.fromList $ gEdges x
                 for_ ys $ \y ->
                     flip (MU.unsafeModify v) (gVertexIndex y) $ \d -> merge d (c + 1)
-                go v (xs' `S.union` ys)
+                go v (xs' `Set.union` ys)
 
 -------------------------------------------------------------------------------
 -- Transpose
@@ -537,8 +537,8 @@ transitiveImpl pre g@G {..} = g { gEdges = gEdges' } where
 -- Right (fromList [('a',fromList "bdex"),('b',fromList "d"),('d',fromList "e"),('e',fromList ""),('x',fromList "de")])
 --
 adjacencyMap :: Ord v => G v i -> Map v (Set v)
-adjacencyMap G {..} = M.fromList $ map f gVertices where
-    f x = (gFromVertex x, S.fromList $ map gFromVertex $ gEdges x)
+adjacencyMap G {..} = Map.fromList $ map f gVertices where
+    f x = (gFromVertex x, Set.fromList $ map gFromVertex $ gEdges x)
 
 -- | Adjacency list representation of 'G'.
 --
@@ -549,15 +549,15 @@ adjacencyList :: Ord v => G v i -> [(v, [v])]
 adjacencyList = flattenAM . adjacencyMap
 
 flattenAM :: Map a (Set a) -> [(a, [a])]
-flattenAM = map (fmap S.toList) . M.toList
+flattenAM = map (fmap Set.toList) . Map.toList
 
 -- | Edges set.
 --
--- >>> runG example $ \g@G{..} -> map (\(a,b) -> [gFromVertex a, gFromVertex b]) $  S.toList $ edgesSet g
+-- >>> runG example $ \g@G{..} -> map (\(a,b) -> [gFromVertex a, gFromVertex b]) $  Set.toList $ edgesSet g
 -- Right ["ax","ab","ad","ae","xd","xe","bd","de"]
 --
 edgesSet :: Ord i => G v i -> Set (i, i)
-edgesSet G {..} = S.fromList
+edgesSet G {..} = Set.fromList
     [ (x, y)
     | x <- gVertices
     , y <- gEdges x

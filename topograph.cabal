@@ -9,7 +9,7 @@ description:
   Existence of topographic ordering allows writing many graph algorithms efficiently.
   And many graphs, e.g. most dependency graphs are acyclic!
   .
-  There are some algorithms build-in: dfs, transpose, transitive closure,
+  There are some algorithms built-in: dfs, transpose, transitive closure,
   transitive reduction...
   Some algorithms even become not-so-hard to implement, like a longest path!
 

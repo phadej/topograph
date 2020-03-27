@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -567,9 +568,11 @@ edgesSet G {..} = Set.fromList
 -- Utilities
 -------------------------------------------------------------------------------
 
+#if !(MIN_VERSION_base(4,14,0))
 -- | Unwrap 'Down'.
 getDown :: Down a -> a
 getDown (Down a) = a
+#endif
 
 -- | Like 'pairs' but for 'T.Tree'.
 treePairs :: T.Tree a -> [(a,a)]

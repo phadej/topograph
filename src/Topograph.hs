@@ -127,7 +127,7 @@ data G v i = G
     , gEdges        :: i -> [i]        -- ^ /O(1)/. Outgoing edges. Note: target indices are larger than source index.
     , gDiff         :: i -> i -> Int   -- ^ /O(1)/. Upper bound of the path length. Negative means there aren't path.
     , gVerticeCount :: Int             -- ^ /O(1)/. @'gVerticeCount' g = 'length' ('gVertices' g)@
-    , gVertexIndex  :: i -> Int        -- ^ /O(1)/. @'Just' ('verticeIndex' g x) = 'elemIndex' x ('gVertices' g)@. Note, there are no efficient way to convert 'Int' into 'i', convertion back and forth is discouraged on purpose.
+    , gVertexIndex  :: i -> Int        -- ^ /O(1)/. @'Just' ('verticeIndex' g x) = 'elemIndex' x ('gVertices' g)@. Note, there are no efficient way to convert 'Int' into 'i', conversion back and forth is discouraged on purpose.
     }
 
 -- | Run action on topologically sorted representation of the graph.
@@ -579,7 +579,7 @@ treePairs :: T.Tree a -> [(a,a)]
 treePairs (T.Node i js) =
     [ (i, j) | T.Node j _ <- js ] ++ concatMap treePairs js
 
--- | Consequtive pairs.
+-- | Consecutive pairs.
 --
 -- >>> pairs [1..10]
 -- [(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8),(8,9),(9,10)]

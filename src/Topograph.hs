@@ -67,32 +67,46 @@ import qualified Data.Vector.Unboxed.Mutable as MU
 
 -- $setup
 --
+-- Initial setup and imports:
+--
+-- >>> :set -XRecordWildCards
+-- >>> import Data.Monoid (All (..))
+-- >>> import Data.Foldable (traverse_)
+-- >>> import Data.List (elemIndex, sort)
+-- >>> import Data.Tree (Tree (..))
+-- >>> import Data.Map (Map)
+-- >>> import Data.Set (Set)
+-- >>> import qualified Data.Tree as T
+-- >>> import qualified Data.Map as Map
+-- >>> import qualified Data.Set as Set
+--
+-- Some compatibility imports
+--
+-- >>> import Control.Applicative
+-- >>> import Data.Foldable (traverse_, foldMap)
+--
 -- Graph used in examples:
 --
 -- <<dag-original.png>>
 --
 -- >>> let example :: Map Char (Set Char); example = Map.map Set.fromList $ Map.fromList [('a', "bxde"), ('b', "d"), ('x', "de"), ('d', "e"), ('e', "")]
 --
--- >>> :set -XRecordWildCards
--- >>> import Data.Monoid (All (..))
--- >>> import Data.Foldable (traverse_)
--- >>> import Data.List (elemIndex)
--- >>> import Data.Tree (Tree (..))
---
 -- == Few functions to be used in examples
 --
 -- To make examples slightly shorter:
 --
--- >>> let fmap2 = fmap . fmap
--- >>> let fmap3 = fmap . fmap2
--- >>> let traverse2_ = traverse_ . traverse_
--- >>> let traverse3_ = traverse_ . traverse2_
+-- >>> let fmap2 f = fmap (fmap f)
+-- >>> let fmap3 f = fmap (fmap2 f)
+-- >>> let traverse2_ f = traverse_ (traverse_ f)
+-- >>> let traverse3_ f = traverse_ (traverse2_ f)
 --
 -- To display trees:
 --
 -- >>> let dispTree :: Show a => Tree a -> IO (); dispTree = go 0 where go i (T.Node x xs) = putStrLn (replicate (i * 2) ' ' ++ show x) >> traverse_ (go (succ i)) xs
 --
-
+-- And fold them (this function is available in recent @containers@):
+--
+-- >>> let foldTree f = go where go (T.Node x ts) = f x (map go ts)
 --
 
 -------------------------------------------------------------------------------
@@ -277,7 +291,7 @@ allPaths' G {..} a b end = concatMap go (gEdges a) where
 -- <<dag-tree.png>>
 --
 -- >>> let t = runG example $ \g@G{..} -> fmap3 gFromVertex $ allPathsTree g <$> gToVertex 'a' <*> gToVertex 'e'
--- >>> fmap3 (T.foldTree $ \a bs -> if null bs then [[a]] else concatMap (map (a:)) bs) t
+-- >>> fmap3 (foldTree $ \a bs -> if null bs then [[a]] else concatMap (map (a:)) bs) t
 -- Right (Just (Just ["axde","axe","abde","ade","ae"]))
 --
 -- >>> fmap3 (Set.fromList . treePairs) t

@@ -184,11 +184,6 @@ jobs:
       - name: update cabal index
         run: |
           $CABAL v2-update -v
-      - name: cache (tools)
-        uses: actions/cache@v2
-        with:
-          key: ${{ runner.os }}-${{ matrix.compiler }}-tools-40341616
-          path: ~/.haskell-ci-tools
       - name: install cabal-plan
         run: |
           mkdir -p $HOME/.cabal/bin
@@ -198,10 +193,15 @@ jobs:
           rm -f cabal-plan.xz
           chmod a+x $HOME/.cabal/bin/cabal-plan
           cabal-plan --version
-      - name: install doctest
+      - name: install cabal-docspec
         run: |
-          if [ $((HCNUMVER >= 80200 && HCNUMVER < 81000)) -ne 0 ] ; then $CABAL --store-dir=$HOME/.haskell-ci-tools/store v2-install $ARG_COMPILER --ignore-project -j2 doctest --constraint='doctest ^>=0.20' ; fi
-          if [ $((HCNUMVER >= 80200 && HCNUMVER < 81000)) -ne 0 ] ; then doctest --version ; fi
+          mkdir -p $HOME/.cabal/bin
+          curl -sL https://github.com/phadej/cabal-extras/releases/download/cabal-docspec-0.0.0.20211114/cabal-docspec-0.0.0.20211114.xz > cabal-docspec.xz
+          echo 'e224700d9e8c9ec7ec6bc3f542ba433cd9925a5d356676c62a9bd1f2c8be8f8a  cabal-docspec.xz' | sha256sum -c -
+          xz -d < cabal-docspec.xz > $HOME/.cabal/bin/cabal-docspec
+          rm -f cabal-docspec.xz
+          chmod a+x $HOME/.cabal/bin/cabal-docspec
+          cabal-docspec --version
       - name: checkout
         uses: actions/checkout@v2
         with:
@@ -254,10 +254,10 @@ jobs:
       - name: build
         run: |
           $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --write-ghc-environment-files=always
-      - name: doctest
+      - name: docspec
         run: |
-          if [ $((HCNUMVER >= 80200 && HCNUMVER < 81000)) -ne 0 ] ; then cd ${PKGDIR_topograph} || false ; fi
-          if [ $((HCNUMVER >= 80200 && HCNUMVER < 81000)) -ne 0 ] ; then doctest  -XHaskell2010 src ; fi
+          $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all
+          cabal-docspec $ARG_COMPILER
       - name: cabal check
         run: |
           cd ${PKGDIR_topograph} || false

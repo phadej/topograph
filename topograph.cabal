@@ -1,7 +1,6 @@
 cabal-version:   2.2
 name:            topograph
-version:         1.0.0.1
-x-revision:      5
+version:         1.0.0.2
 synopsis:        Directed acyclic graphs.
 category:        Data, Graph
 description:

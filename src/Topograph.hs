@@ -41,8 +41,6 @@ module Topograph (
     ) where
 
 import Data.Orphans ()
-import Prelude ()
-import Prelude.Compat
 
 import Control.Monad.ST (ST, runST)
 import Data.Foldable    (for_)

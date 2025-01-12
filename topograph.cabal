@@ -1,7 +1,6 @@
 cabal-version:   2.2
 name:            topograph
-version:         1.0.1
-x-revision:      1
+version:         1.0.2
 synopsis:        Directed acyclic graphs.
 category:        Data, Graph
 description:
@@ -22,6 +21,7 @@ maintainer:      Oleg.Grenrus <oleg.grenrus@iki.fi>
 copyright:       (c) 2018-2019 Oleg Grenrus
 build-type:      Simple
 extra-doc-files:
+  CHANGELOG.md
   dag-closure.png
   dag-original.png
   dag-reduction.png

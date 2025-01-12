@@ -24,6 +24,8 @@ module Topograph (
     -- * DFS
     dfs,
     dfsTree,
+    -- * Filtering
+    filter,
     -- * All paths
     allPaths,
     allPaths',
@@ -41,6 +43,10 @@ module Topograph (
     ) where
 
 import Data.Orphans ()
+
+import Prelude hiding (filter)
+
+import qualified Prelude as P
 
 import Control.Monad.ST (ST, runST)
 import Data.Foldable    (for_)
@@ -273,7 +279,7 @@ allPaths' G {..} a b end = concatMap go (gEdges a) where
         | i == b    = [end]
         | otherwise =
             let js :: [i]
-                js = filter (<= b) $ gEdges i
+                js = P.filter (<= b) $ gEdges i
 
                 js2b :: [[i]]
                 js2b = concatMap go js
@@ -337,7 +343,7 @@ allPathsTree G {..} a b = go a where
     go :: i -> Maybe (T.Tree i)
     go i
         | i == b    = Just (T.Node b [])
-        | otherwise = case mapMaybe go $ filter (<= b) $ gEdges i of
+        | otherwise = case mapMaybe go $ P.filter (<= b) $ gEdges i of
             [] -> Nothing
             js -> Just (T.Node i js)
 
@@ -371,6 +377,26 @@ dfsTree G {..} = go where
     go a = case gEdges a of
         [] -> T.Node a []
         bs -> T.Node a $ map go bs
+
+-------------------------------------------------------------------------------
+-- Filter
+-------------------------------------------------------------------------------
+
+-- | Filter graph vertices.
+-- 
+filter :: forall v i. Ord i => (v -> Bool) -> G v i -> G v i
+filter p G {..} = G
+    { gVertices     = gVertices'
+    , gFromVertex   = _
+    , gToVertex     = _
+    , gEdges        = _
+    , gDiff         = _
+    , gVerticeCount = _
+    , gVertexIndex  = id
+    }
+  where
+    gVertices' :: [Int]
+    gVertices' = map gVertexIndex . filter (p . gFromVertex) gVertices
 
 -------------------------------------------------------------------------------
 -- Longest / shortest path
